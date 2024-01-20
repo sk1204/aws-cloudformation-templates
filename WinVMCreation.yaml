@@ -1,0 +1,238 @@
+'AWSTemplateFormatVersion': '2010-09-09'
+'Description': 'Amazon Cloudformation Template to create one EC2 Windows instance
+  from a Windows 2019 Base AMI (ami-0d28bf0201017ce45). Uses existing Security Group,
+  Key'
+'Mappings':
+  'DirectoryMap':
+    '672555288864':
+      'directoryId': 'd-92670cd5d3'
+    '106009679789':
+      'directoryId': 'd-92670cd5d4'
+    '786193666119':
+      'directoryId': 'd-92670d0619'
+    '813616576434':
+      'directoryId': 'd-92670d31c3'
+    '038301391979':
+      'directoryId': 'd-92670d31c4'
+    '421435808696':
+      'directoryId': 'd-92670d31c5'
+    '395622124951':
+      'directoryId': 'd-92670d31c6'
+    '607287305442':
+      'directoryId': 'd-92670d31c7'
+    '108405464763':
+      'directoryId': 'd-92670d31c8'
+    '353554608351':
+      'directoryId': 'd-92670d31c9'
+    '482057569189':
+      'directoryId': 'd-92670d31cb'
+    '994206138878':
+      'directoryId': 'd-92670d1861'
+'Parameters':
+  'InstanceType':
+    'Description': 'EC2 instance type'
+    'Type': 'String'
+    'Default': 'm5.xlarge'
+    'AllowedValues':
+    - 't2.small'
+    - 't2.medium'
+    - 't2.large'
+    - 't2.xlarge'
+    - 't2.2xlarge'
+    - 't3.small'
+    - 't3.medium'
+    - 't3.large'
+    - 't3.xlarge'
+    - 't3.2xlarge'
+    - 'm5.large'
+    - 'm5.xlarge'
+    - 'm5.2xlarge'
+    - 'm5.4xlarge'
+    - 'm4.large'
+    - 'm4.xlarge'
+    - 'm4.2xlarge'
+    - 'm4.4xlarge'
+    - 'c5.large'
+    - 'c5.xlarge'
+    - 'c5.2xlarge'
+    - 'c5.4xlarge'
+    - 'c4.large'
+    - 'c4.xlarge'
+    - 'c4.2xlarge'
+    - 'c4.4xlarge'
+  'InstanceName':
+    'Description': 'Provide a name for the instance'
+    'Type': 'String'
+    'AllowedPattern': '.+'
+    'Default': 'auw2wawspdc02'
+  'Environment':
+    'Type': 'String'
+    'Description': 'The environment in which this EC2 instance will be launched.'
+    'Default': 'prod'
+    'AllowedValues':
+    - 'prod'
+    - 'qa'
+    - 'uat'
+    - 'dev'
+  'Application':
+    'Description': 'Specify an application name'
+    'Type': 'String'
+    'AllowedPattern': '.+'
+    'Default': 'DC'
+  'Function':
+    'Type': 'String'
+    'Description': 'The main function this instance will serve--eg., app-server, db-server,
+      etc.'
+  'CreatedBy':
+    'Description': 'Provide your email address'
+    'Type': 'String'
+    'AllowedPattern': '.+'
+    'Default': 'deependra.shekhar@cepheid.com'
+  'RequestedBy':
+    'Description': 'Provide email address of the requestor'
+    'Type': 'String'
+    'AllowedPattern': '.+'
+    'Default': 'rob.marles@cepheid.com'
+  'ImageId':
+    'Description': 'AMI Image Id'
+    'Type': 'AWS::EC2::Image::Id'
+  'KeyName':
+    'Description': 'Name of an existing KeyPair to enable SSH to EC2 Instance'
+    'Type': 'AWS::EC2::KeyPair::KeyName'
+  'VpcId':
+    'Description': 'VPC ID'
+    'Type': 'AWS::EC2::VPC::Id'
+  'SubnetId':
+    'Description': 'Enter subnet ID'
+    'Type': 'AWS::EC2::Subnet::Id'
+  'SecurityGroups':
+    'Description': 'Provide an existing security Group'
+    'Type': 'AWS::EC2::SecurityGroup::Id'
+'Resources':
+  'Instance':
+    'Type': 'AWS::EC2::Instance'
+    'Properties':
+      'IamInstanceProfile': '{{resolve:ssm:EC2DomainJoinInstanceProfile:1}}'
+      'SsmAssociations':
+      - 'DocumentName': '{{resolve:ssm:EC2DomainJoinSSMDocumentName:1}}'
+        # 'AssociationParameters':
+        # - 'Key': 'directoryId'
+        #   'Value':
+        #   - 'Fn::FindInMap':
+        #     - 'DirectoryMap'
+        #     - 'Ref': 'AWS::AccountId'
+        #     - 'directoryId'
+      'KeyName':
+        'Ref': 'KeyName'
+      'Monitoring': !!bool 'false'
+      'SecurityGroupIds':
+        'Ref': 'SecurityGroups'
+      'SubnetId':
+        'Ref': 'SubnetId'
+      'Tenancy': 'default'
+      'EbsOptimized': !!bool 'true'
+      'SourceDestCheck': !!bool 'true'
+      'ImageId':
+        'Ref': 'ImageId'
+      'InstanceInitiatedShutdownBehavior': 'stop'
+      'InstanceType':
+        'Ref': 'InstanceType'
+      'DisableApiTermination': !!bool 'false'
+      'BlockDeviceMappings':
+      - 'DeviceName': '/dev/sda1'
+        'Ebs':
+          'VolumeType': 'gp2'
+          'DeleteOnTermination': 'false'
+          'VolumeSize': '100'
+      - 'DeviceName': '/dev/xvdb'
+        'Ebs':
+          'VolumeType': 'gp2'
+          'DeleteOnTermination': 'false'
+          'VolumeSize': '100'
+      'Tags':
+      - 'Key': 'Name'
+        'Value':
+          'Ref': 'InstanceName'
+      - 'Key': 'cep:application'
+        'Value':
+          'Ref': 'Application'
+      - 'Key': 'cep:backup'
+        'Value': 'daily'
+      - 'Key': 'cep:business-owner'
+        'Value': ' '
+      - 'Key': 'cep:common-name'
+        'Value': ' '
+      - 'Key': 'cep:cost-center'
+        'Value': ' '
+      - 'Key': 'cep:country'
+        'Value':
+          'Ref': 'AWS::Region'
+      - 'Key': 'cep:creator'
+        'Value':
+          'Ref': 'CreatedBy'
+      - 'Key': 'cep:department'
+        'Value': ' '
+      - 'Key': 'cep:environment'
+        'Value':
+          'Ref': 'Environment'
+      - 'Key': 'cep:external-address'
+        'Value': ' '
+      - 'Key': 'cep:function'
+        'Value':
+          'Ref': 'Function'
+      - 'Key': 'cep:name'
+        'Value':
+          'Ref': 'InstanceName'
+      - 'Key': 'cep:patch-group'
+        'Value': ' '
+      - 'Key': 'cep:project'
+        'Value': ' '
+      - 'Key': 'cep:requestor'
+        'Value':
+          'Ref': 'RequestedBy'
+      - 'Key': 'cep:technical-contact'
+        'Value': ' '
+      - 'Key': 'cep:validated'
+        'Value': ' '
+'Outputs':
+  'InstanceName':
+    'Description': 'App server Instance Id'
+    'Value':
+      'Ref': 'InstanceName'
+  'Instance':
+    'Description': 'App server Instance Id'
+    'Value':
+      'Ref': 'Instance'
+  'IPAddress':
+    'Description': 'Private IP address'
+    'Value':
+      'Fn::GetAtt': 'Instance.PrivateIp'
+  'InstanceDNS':
+    'Description': 'Internal FQDN of the instance'
+    'Value':
+      'Fn::Join':
+      - '.'
+      - - 'Ref': 'InstanceName'
+        - 'cepheid'
+        - 'pri'
+  'Application':
+    'Description': 'Application Name'
+    'Value':
+      'Ref': 'Application'
+  'Environment':
+    'Description': 'Environment'
+    'Value':
+      'Ref': 'Environment'
+  'CreatedBy':
+    'Description': 'Resource Created by'
+    'Value':
+      'Ref': 'CreatedBy'
+  'RequestedBy':
+    'Description': 'Resource requested by'
+    'Value':
+      'Ref': 'RequestedBy'
+  'AMIId':
+    'Description': 'AMI used to launch the instance'
+    'Value':
+      'Ref': 'ImageId'
+'Rules': {}

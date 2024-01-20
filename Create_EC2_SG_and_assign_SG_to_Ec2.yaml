@@ -1,0 +1,40 @@
+# Thsi is a updated template for Create_EC2_and_SG.yaml to assign the Secuity Group to EC2
+# If you the VM is created in a default VPC, While updating teh template with 
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: First Tempate for creating an EC2 instance
+Resources: # This is Resources Section where you define your Resources
+
+  Webserver: # This name can be anything to represnet your resource
+    Type: AWS::EC2::Instance  # This specify the type of the resource, Its says the resource type is EC2
+    Properties:
+      ImageId: ami-0f048a9d88ce87044
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        -
+          Ref: WebServerSecurityGroup
+       
+      Tags:
+        -
+          Key: Name
+          Value: Webserver
+        -
+          Key: Project
+          Value: First CF templete creation
+
+  WebServerSecurityGroup:  # This name can be anything to represnet your resource
+    Type: AWS::EC2::SecurityGroup # This specify the type of the resource, Its says the resource type if SecurityGroup
+    Properties:
+      GroupDescription: SecurityGroup for Webserver
+      SecurityGroupIngress:  # Predefined tag for defining Security Groups ingress rules
+      - 
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      Tags:
+        -
+          Key: Name
+          Value: WebserverSG
+
+          
